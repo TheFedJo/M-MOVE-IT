@@ -10,6 +10,9 @@ from django.http import HttpResponse
 def landingpage(request):
     return render(request, 'landingpage.html')
 
+def workinprogress(request):
+    return render(request, 'workinprogress.html')
+
 def createProject(request):
     if request.method == 'POST':
         createprojectform = CreateProject(request.POST)
@@ -51,7 +54,6 @@ def createProject(request):
 
     else:
         createprojectform = CreateProject()
-    
     return render(request, 'createproject.html', {'createprojectform': createprojectform})
 
 def exportProject(request):
