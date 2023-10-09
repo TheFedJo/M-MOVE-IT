@@ -13,7 +13,8 @@ class SensorOffsetForm(forms.ModelForm):
         model = SensorOffset
         fields = ['camera', 'imu', 'offset', 'offset_Date']
 
-    def __init__(self, project=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        project = kwargs.pop('project', None)
         super().__init__(*args, **kwargs)
 
         # Filter camera choices to show only sensors with sensortype 'C'

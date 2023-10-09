@@ -84,7 +84,7 @@ def offset(request, project_id):
     project = Project.objects.get(id=project_id)
     sensoroffset = SensorOffset.objects.all().order_by('offset_Date')
     if request.method == 'POST':
-        sensoroffsetform = SensorOffsetForm(request.POST)
+        sensoroffsetform = SensorOffsetForm(request.POST, project=project)
         if sensoroffsetform.is_valid():
             camera = sensoroffsetform.cleaned_data['camera']
             imu = sensoroffsetform.cleaned_data['imu']
