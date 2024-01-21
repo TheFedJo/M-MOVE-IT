@@ -15,6 +15,12 @@
     </form>
   </div>
     <h1>{{ main_project }} - overview</h1>
+    <p>
+      Welcome at the project overview of {{ main_project }}! Here you find the step-by-step work flow to annotate your project. 
+      AISensus can be used to annotate subject activity in IMU data. This is simplified by first annotating the subject presence in the video data and then
+      synchronizing the used IMU sensors with the used cameras. Overlaps between the video data and IMU data are then used to pre-slice the data into segments
+      with subjects present of a chosen length. These segments can then be annotated for subject activity.
+    </p>
     <ol>
         <li><a href="{% url 'sensormodel:sensor' main_project.project_id %}">Manage sensors</a></li>
         Manage your project sensors here. Add cameras or IMU sensors to your projects.

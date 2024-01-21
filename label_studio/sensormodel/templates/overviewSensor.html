@@ -57,6 +57,7 @@
     </div>
     <div class="forms">
         <h2>Add sensor</h2>
+        <h3>It is important to synchronize the sensortypes first at the bottom of this page!</h3>
         <form action="{% url 'sensormodel:sensor' project.id %}" method="post">
             <table>
             {{ sensorform.as_table }}
