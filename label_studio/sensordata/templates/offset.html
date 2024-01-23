@@ -57,12 +57,34 @@
         </form>
     </div>
     <div class="forms">
-        <h2>Select the data that is intended for the syncronization of the sensors</h2>
+        <h2>Select the data that is intended for the synchronization of the sensors</h2>
         <form action="{% url 'sensordata:generate_tasks' project.id %}" method="post">
-            {{ offsetannotationform }}
+            {% csrf_token %}
+            <table class="forms">
+                <tr>
+                    <th>Sensor Data</th>
+                    <th>Begin datetime</th>
+                    <th>End datetime</th>
+                    <th>Manual Offset</th>
+                    <th></th>
+                </tr>
+                {% for choice in offsetannotationform.sync_sensordata %}
+                    <tr>
+                        <td>{{ choice }}</td>
+                        {% for data in sensor_data %}
+                            {% if choice.id == data.id %}
+                                <td>{{ data.begin_datetime }}</td>
+                                <td>{{ data.end_datetime }}</td>
+                                <td>{{ data.sensor.manual_offset }}</td>
+                                <td>Edit</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
             <input type="submit" value="Add sensor offset">
         </form>
-    </div>
+    </div>    
     <div class="buttons">
         <form action="{% url 'data_manager:project-data' offset_project.id %}">
             <input type="submit" value="Go to offset annotation project" style="background-color: #c4862b; width:50%"/>

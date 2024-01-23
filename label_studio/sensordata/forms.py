@@ -53,6 +53,12 @@ class OffsetAnnotationForm(forms.Form):
         super(OffsetAnnotationForm, self).__init__(*args, **kwargs)
 
         if project is not None:
-            self.fields['sync_sensordata'].queryset = SensorData.objects.filter(project=project)
-    
+            queryset = SensorData.objects.filter(project=project)
+            self.fields['sync_sensordata'].queryset = queryset
+
+            # Include additional fields in the queryset
+            # self.fields['sync_sensordata'].queryset = queryset.values(
+            #     'id','name', 'begin_datetime', 'end_datetime', 'sensor__manual_offset'
+            # )
+
    

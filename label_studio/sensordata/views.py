@@ -24,7 +24,7 @@ import zipfile
 import re
 import os
 import subprocess
-
+from pprint import pprint
 from projects.models import Project
 from tasks.models import Task
 from django.contrib import messages
@@ -118,7 +118,16 @@ def offset(request, project_id):
     offset_annotation_project = Project.objects.get(id=project.id+3)
     sensoroffset = SensorOffset.objects.filter(project=project).order_by('sensor_A')
     offsetannotationform = OffsetAnnotationForm(project=project)
-    return render(request, 'offset.html', {'offsetannotationform':offsetannotationform, 'sensoroffset':sensoroffset, 'project':project, 'offset_project': offset_annotation_project})
+    context = {
+        'offsetannotationform':offsetannotationform,
+        'sensor_data':SensorData.objects.filter(project=project), 
+        'sensoroffset':sensoroffset, 
+        'project':project, 
+        'offset_project': offset_annotation_project
+    }
+    
+    return render(request, 'offset.html', context)
+
 
 
 def delete_offset(request, project_id, id):
