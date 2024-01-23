@@ -66,25 +66,29 @@
                     <th>Begin datetime</th>
                     <th>End datetime</th>
                     <th>Manual Offset</th>
-                    <th></th>
                 </tr>
                 {% for choice in offsetannotationform.sync_sensordata %}
-                    <tr>
-                        <td>{{ choice }}</td>
-                        {% for data in sensor_data %}
-                            {% if choice.id == data.id %}
-                                <td>{{ data.begin_datetime }}</td>
-                                <td>{{ data.end_datetime }}</td>
-                                <td>{{ data.sensor.manual_offset }}</td>
-                                <td>Edit</td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
+                    {% for data in sensor_data %}
+                        {% if forloop.counter == forloop.parentloop.counter %}
+                            <tr>
+                                <td>{{ choice }}</td>
+                                {% if data.sensor.manual_offset %}
+                                    <td>{{ data.begin_datetime_adjusted|date:"Y-m-d H:i:s" }}</td>
+                                    <td>{{ data.end_datetime_adjusted|date:"Y-m-d H:i:s" }}</td>
+                                    <td>{{ data.sensor.manual_offset }} <a href="{% url 'sensordata:manual_offset' project.id data.sensor.id %}"> [Edit] </a></td>
+                                {% else %}
+                                    <td>{{ data.begin_datetime|date:"Y-m-d H:i:s" }}</td>
+                                    <td>{{ data.end_datetime|date:"Y-m-d H:i:s" }}</td>
+                                    <td>0 <a href="{% url 'sensordata:manual_offset' project.id data.sensor.id %}"> [Edit] </a></td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
             </table>
             <input type="submit" value="Add sensor offset">
         </form>
-    </div>    
+    </div>
     <div class="buttons">
         <form action="{% url 'data_manager:project-data' offset_project.id %}">
             <input type="submit" value="Go to offset annotation project" style="background-color: #c4862b; width:50%"/>

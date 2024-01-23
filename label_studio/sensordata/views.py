@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.apps import apps
-from .forms import SensorDataForm, SensorOffsetForm, OffsetAnnotationForm
+from .forms import SensorDataForm, SensorOffsetForm, OffsetAnnotationForm, SensorForm
 from .models import SensorData, SensorOffset, SyncSensorOverlap
 from .parsing.sensor_data import SensorDataParser
 from .parsing.video_metadata import VideoMetaData
@@ -118,17 +118,39 @@ def offset(request, project_id):
     offset_annotation_project = Project.objects.get(id=project.id+3)
     sensoroffset = SensorOffset.objects.filter(project=project).order_by('sensor_A')
     offsetannotationform = OffsetAnnotationForm(project=project)
+    # Calculate adjusted datetimes
+    sensor_data = SensorData.objects.filter(project=project)
+    for data in sensor_data:
+        if data.sensor.manual_offset:
+            data.begin_datetime_adjusted = data.begin_datetime + timedelta(seconds=data.sensor.manual_offset)
+            data.end_datetime_adjusted = data.end_datetime + timedelta(seconds=data.sensor.manual_offset)
+        else:
+            data.begin_datetime_adjusted = data.begin_datetime
+            data.end_datetime_adjusted = data.end_datetime
     context = {
         'offsetannotationform':offsetannotationform,
-        'sensor_data':SensorData.objects.filter(project=project), 
+        'sensor_data':sensor_data, 
         'sensoroffset':sensoroffset, 
         'project':project, 
         'offset_project': offset_annotation_project
     }
     
+    
     return render(request, 'offset.html', context)
 
-
+def adjust_manual_offset(request, project_id, id):
+    sensor = Sensor.objects.get(id=id)
+    project = Project.objects.get(id=project_id)
+    if request.method == 'POST':
+        # Send POST to adjust a sensor
+        sensorform = SensorForm(request.POST,instance=sensor)
+        if sensorform.is_valid():
+            sensorform.save()
+            return redirect('sensordata:offset', project_id = project_id)
+    else:
+        # Go to sensor adjustment page
+        sensorform = SensorForm(instance=sensor)
+    return render(request, 'edit_manual_offset.html', {'sensorform':sensorform, 'project':project})
 
 def delete_offset(request, project_id, id):
     project = Project.objects.get(id=project_id)

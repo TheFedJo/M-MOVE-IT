@@ -62,3 +62,15 @@ class OffsetAnnotationForm(forms.Form):
             # )
 
    
+class SensorForm(forms.ModelForm):
+    class Meta:
+        model = Sensor
+        fields = ['manual_offset']
+        widgets = {
+            'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in milliseconds (integer)'}),
+        }
+
+        def __init__(self, *args, **kwargs):
+            project = kwargs.pop('project', None)
+            super(SubjectForm, self).__init__(*args, **kwargs)
+            self.instance.project = project
