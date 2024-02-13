@@ -7,7 +7,7 @@ class SensorForm(forms.ModelForm):
         model = models.Sensor
         fields = ['name','parsable_sensor_id','sensortype','manual_offset']
         widgets = {
-            'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in milliseconds (integer)'}),
+            'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in seconds (integer)'}),
         }
 
         def __init__(self, *args, **kwargs):
