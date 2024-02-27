@@ -16,10 +16,7 @@
   </div>
     <h1>{{ main_project }} - overview</h1>
     <p>
-      Welcome at the project overview of {{ main_project }}! Here you find the step-by-step work flow to annotate your project. 
-      AISensus can be used to annotate subject activity in IMU data. This is simplified by first annotating the subject presence in the video data and then
-      synchronizing the used IMU sensors with the used cameras. Overlaps between the video data and IMU data are then used to pre-slice the data into segments
-      with subjects present of a chosen length. These segments can then be annotated for subject activity.
+      Welcome to your Project Dashboard! This central hub guides you through a step-by-step workflow for effectively annotating your data. Our workflow assists you in organizing and synchronizing your data with ease. The process is broken down as follows: Steps 1-4 link data to subjects and deploy sensors on those subjects. In step 5, you will annotate your 'raw' video for subject presence. Because the sensors employed in your project are not perfectly synchronized, we need to find the time offset in the clocks from your sensors. In step 6, you will annotate the offset between sensors. These 'subject presence' annotations are used in step 7 to create annotation tasks that automatically combine data from multiple sensor modalities. Step 8 will then take you to the activity annotation page, where you can investigate and annotate the synchronized multimodal data. Step 9 allows you to export all the annotations. Further details are provided in the respective steps below. 
     </p>
     <ol>
         <li><a href="{% url 'sensormodel:sensor' main_project.project_id %}">Manage sensors</a></li>
