@@ -11,7 +11,7 @@
 <body>
     <div class="buttons">
       <form action="{% url 'landingpage:landingpage' project.id %}">
-          <input type="submit" value="Go back to project page" style="background-color: #c4862b; width:25%"/>
+          <input type="submit" value="Go back to project dashboard" style="background-color: #c4862b; width:25%"/>
       </form>
     </div>
     <div class="forms">
@@ -21,11 +21,11 @@
             <table>
             {{ taskgenerationform.as_table }}
             </table>
-            <input type="submit" value="Generate">
+            <input type="submit" value="Generate tasks">
         </form>
     </div>
     <div id="taskgeneration-message" style="display: none;">
-      <p>Generate activity annotation tasks! Please wait...</p>
+      <p>Generating activity annotation tasks! Please wait...</p>
     </div>
     <script>
       document.getElementById('taskgeneration-form').addEventListener('submit',function() {
