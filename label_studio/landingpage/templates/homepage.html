@@ -22,14 +22,12 @@
                 <th>Name</th>
                 <th>ID</th>
                 <th></th>
-                <th></th>
             </tr>
             <tr>
             {% for project in projects %}
             <tr>
-                <td>{{ project.name }}</td>
+                <td><a href="{% url 'landingpage:landingpage' project.project_id %}">{{ project.name }}</a></td>
                 <td>{{ project.project_id }}</td>
-                <td><a href="{% url 'landingpage:landingpage' project.project_id %}">Go to project page</a></td>
                 <td><a href="{% url 'landingpage:delete-project' project.project_id %}">[Delete]</a></td>
             </tr> 
            {% endfor %} 
