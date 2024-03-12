@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.apps import apps
 from .forms import SensorDataForm, SensorOffsetForm, OffsetAnnotationForm, SensorForm
 from .models import SensorData, SensorOffset, SyncSensorOverlap
@@ -28,6 +28,7 @@ from pprint import pprint
 from projects.models import Project
 from tasks.models import Task
 from django.contrib import messages
+from django.views.generic.edit import FormView
 
 
 UNITS = {'days': 86400, 'hours': 3600, 'minutes': 60, 'seconds':1, 'milliseconds':0.001}
@@ -45,51 +46,56 @@ def addsensordata(request, project_id):
         sensordataform = SensorDataForm(request.POST, request.FILES, project=project)
         if sensordataform.is_valid():
             # Get form data
-            uploaded_file = sensordataform.cleaned_data['file']
             project = project
             sensor = sensordataform.cleaned_data.get('sensor')
-
+            # Get parsable sensor id
             parsable_sensor_id = sensor.parsable_sensor_id
+            # Get uploaded files
+            uploaded_files = request.FILES.getlist('file')
             
-            # Check if the uploaded file is a zip file
-            if zipfile.is_zipfile(uploaded_file):
-                # Process the zip file
-                with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
-                    for file_name in zip_ref.namelist():
-                        if (file_name.lower().endswith('.csv') or file_name.lower().endswith('.mp4')):  # Check if the file is a CSV or MP4 file
-                            if parsable_sensor_id is None or file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
-                                # Extract each file from the zip to a temporary location
-                                
-                                temp_file_path = zip_ref.extract(file_name)
-                                
-                                # Process the individual file
-                                process_sensor_file(request, temp_file_path, sensor, file_name, project)
-                                # Delete the temporary file
-                                os.remove(temp_file_path)
-                            else:
-                                mismatched_files.append(file_name)
-                if mismatched_files:
-                    # Redirect to the mismatched files warning page
-                    request.session['mismatched_files'] = mismatched_files
-                    return redirect('sensordata:file-upload-warning', project_id=project_id)
-                
-                return redirect('sensordata:sensordatapage', project_id=project_id) 
-            elif uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4'):
-                if isinstance(uploaded_file, InMemoryUploadedFile):
-        # Write the contents of the file to a temporary file on disk
-                    with NamedTemporaryFile(delete=False) as temp_file:
-                        for chunk in uploaded_file.chunks():
-                            temp_file.write(chunk)
-                        file_path = temp_file.name
+            for uploaded_file in uploaded_files:
+                # Check if the uploaded file is a zip file
+                if zipfile.is_zipfile(uploaded_file):
+                    # Process the zip file
+                    with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
+                        for file_name in zip_ref.namelist():
+                            if (file_name.lower().endswith('.csv') or file_name.lower().endswith('.mp4')):  # Check if the file is a CSV or MP4 file
+                                if parsable_sensor_id is None or file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
+                                    # Extract each file from the zip to a temporary location
+                                    
+                                    temp_file_path = zip_ref.extract(file_name)
+                                    file_name = os.path.basename(file_name)
+                                    
+                                    # Process the individual file
+                                    process_sensor_file(request, temp_file_path, sensor, file_name, project)
+                                    # Delete the temporary file
+                                    os.remove(temp_file_path)
+                                else:
+                                    mismatched_files.append(file_name)
+                    if mismatched_files:
+                        # Redirect to the mismatched files warning page
+                        request.session['mismatched_files'] = mismatched_files
+                        return redirect('sensordata:file-upload-warning', project_id=project_id)
+                    
+                    # return redirect('sensordata:sensordatapage', project_id=project_id) 
+                elif uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4'):
+                    if isinstance(uploaded_file, InMemoryUploadedFile):
+                        # Write the contents of the file to a temporary file on disk
+                        with NamedTemporaryFile(delete=False) as temp_file:
+                            for chunk in uploaded_file.chunks():
+                                temp_file.write(chunk)
+                            file_path = temp_file.name
+                    else:
+                        # If file is not InMemoryUploaded use temporary_file_path
+                        file_path = uploaded_file.temporary_file_path()
+                    process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                    
+                    # return redirect('sensordata:sensordatapage', project_id=project_id)
+                # Raise an exception if the uploaded file is not a zip file
                 else:
-                    # If file is not InMemoryUploaded use temporary_file_path
-                    file_path = uploaded_file.temporary_file_path()
-                process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
-                
-                return redirect('sensordata:sensordatapage', project_id=project_id)
-            # Raise an exception if the uploaded file is not a zip file
-            else:
-                raise ValueError("Uploaded file must be zip, '.mp4' or '.csv'.")
+                    raise ValueError("Uploaded file must be zip, '.mp4' or '.csv'.")
+            
+            return redirect('sensordata:sensordatapage', project_id=project_id)
     else:
         sensordataform = SensorDataForm(project=project)
 
