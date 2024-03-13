@@ -72,10 +72,6 @@ def addsensordata(request, project_id):
                                     os.remove(temp_file_path)
                                 else:
                                     mismatched_files.append(file_name)
-                    if mismatched_files:
-                        # Redirect to the mismatched files warning page
-                        request.session['mismatched_files'] = mismatched_files
-                        return redirect('sensordata:file-upload-warning', project_id=project_id)
                     
                     # return redirect('sensordata:sensordatapage', project_id=project_id) 
                 elif uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4'):
@@ -85,17 +81,29 @@ def addsensordata(request, project_id):
                             for chunk in uploaded_file.chunks():
                                 temp_file.write(chunk)
                             file_path = temp_file.name
+                            if parsable_sensor_id is None or file_validation(None, file_path, sensor, parsable_sensor_id):
+                                process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                            else:
+                                mismatched_files.append(uploaded_file.name)
                     else:
                         # If file is not InMemoryUploaded use temporary_file_path
                         file_path = uploaded_file.temporary_file_path()
-                    process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                        if parsable_sensor_id is None or file_validation(None, file_path, sensor, parsable_sensor_id):
+                            process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                        else:
+                            mismatched_files.append(uploaded_file.name)
                     
                     # return redirect('sensordata:sensordatapage', project_id=project_id)
                 # Raise an exception if the uploaded file is not a zip file
                 else:
                     raise ValueError("Uploaded file must be zip, '.mp4' or '.csv'.")
+            if mismatched_files:
+                    # Redirect to the mismatched files warning page
+                    request.session['mismatched_files'] = mismatched_files
+                    return redirect('sensordata:file-upload-warning', project_id=project_id)
             
-            return redirect('sensordata:sensordatapage', project_id=project_id)
+            else:
+                return redirect('sensordata:sensordatapage', project_id=project_id)
     else:
         sensordataform = SensorDataForm(project=project)
 
@@ -105,11 +113,20 @@ def file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
     # Find sensortype
     sensor_type = sensor.sensortype
     # Open the file
-    with zip_ref.open(file_name) as file:
-        for i, line in enumerate(file):
+    if zip_ref != None:
+        with zip_ref.open(file_name) as file:
+            for i, line in enumerate(file):
                 if i == sensor_type.sensor_id_row:
                     sensor_id_column = sensor_type.sensor_id_column if sensor_type.sensor_id_column is not None else 0
                     sensor_id = line.decode('utf-8').split(',')[sensor_id_column].strip()     
+                    if sensor_id == parsable_sensor_id:
+                        return True
+    else:
+        with open(file_name, 'r', encoding='utf-8') as file:
+            for i, line in enumerate(file):
+                if i == sensor_type.sensor_id_row:
+                    sensor_id_column = sensor_type.sensor_id_column if sensor_type.sensor_id_column is not None else 0
+                    sensor_id = line.split(',')[sensor_id_column].strip()     
                     if sensor_id == parsable_sensor_id:
                         return True
 
