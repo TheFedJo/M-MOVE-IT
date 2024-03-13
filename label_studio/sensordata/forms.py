@@ -5,9 +5,10 @@ from sensormodel.models import Sensor
 from sensordata.models import SensorOffset, SensorData
 from projects.models import Project
 
+
 class SensorDataForm(forms.Form):
     sensor = forms.ModelChoiceField(Sensor.objects.all())
-    file = forms.FileField()
+    file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
     def __init__(self, *args, **kwargs):
         project = kwargs.pop('project', None)  # Remove 'project' from kwargs
