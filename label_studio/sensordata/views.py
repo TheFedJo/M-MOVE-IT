@@ -71,19 +71,24 @@ def addsensordata(request, project_id):
                                     # Delete the temporary file
                                     os.remove(temp_file_path)
                                 else:
+                                    # Append the file to list of files with incorrect sensor
                                     mismatched_files.append(file_name)
                     
-                    # return redirect('sensordata:sensordatapage', project_id=project_id) 
+                # If the file is a single data file of csv or mp4 type
                 elif uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4'):
+                    # Django typically stores files smaller than 5MB as a InMemoryUploadedInstance
                     if isinstance(uploaded_file, InMemoryUploadedFile):
                         # Write the contents of the file to a temporary file on disk
                         with NamedTemporaryFile(delete=False) as temp_file:
+                            # Write chunks of the uploaded file to the temporary file
                             for chunk in uploaded_file.chunks():
                                 temp_file.write(chunk)
                             file_path = temp_file.name
+                            # If there is no id for parsing or the data file matches the sensor, the file can be processed
                             if parsable_sensor_id is None or file_validation(None, file_path, sensor, parsable_sensor_id):
                                 process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
                             else:
+                                # Append the file to list of files with incorrect sensor
                                 mismatched_files.append(uploaded_file.name)
                     else:
                         # If file is not InMemoryUploaded use temporary_file_path
@@ -93,7 +98,6 @@ def addsensordata(request, project_id):
                         else:
                             mismatched_files.append(uploaded_file.name)
                     
-                    # return redirect('sensordata:sensordatapage', project_id=project_id)
                 # Raise an exception if the uploaded file is not a zip file
                 else:
                     raise ValueError("Uploaded file must be zip, '.mp4' or '.csv'.")
@@ -112,7 +116,7 @@ def addsensordata(request, project_id):
 def file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
     # Find sensortype
     sensor_type = sensor.sensortype
-    # Open the file
+    # If the data is in the zip file
     if zip_ref != None:
         with zip_ref.open(file_name) as file:
             for i, line in enumerate(file):
@@ -121,6 +125,7 @@ def file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
                     sensor_id = line.decode('utf-8').split(',')[sensor_id_column].strip()     
                     if sensor_id == parsable_sensor_id:
                         return True
+    # If data is a single data file
     else:
         with open(file_name, 'r', encoding='utf-8') as file:
             for i, line in enumerate(file):
