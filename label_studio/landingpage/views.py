@@ -208,7 +208,7 @@ def exportProject(request, project_id):
         # Create a zip file containing both JSON annotations
         zip_file_path = os.path.join(settings.MEDIA_ROOT, settings.UPLOAD_DIR, str(project_id), f"{project_title}_annotations.zip")
 
-        with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        with zipfile.ZipFile(zip_file_path, 'w', allowZip64=True) as zipf:
             # Create the 'subject_annotations' folder and add the JSON file
             with zipf.open('subject_annotations/subject_annotations.json', 'w') as subject_file:
                 subject_file.write(json.dumps(subject_annotations).encode('utf-8'))
