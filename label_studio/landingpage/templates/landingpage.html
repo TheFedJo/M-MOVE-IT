@@ -15,45 +15,48 @@
       <input type="submit" value="Go back to project page" style="background-color: #c4862b; width:25%"/>
     </form>
   </div>
-  <h1>{{ main_project }} - overview</h1>
-  <table>
-    <tr>
-      <td><a href="{% url 'sensormodel:sensor' main_project.project_id %}">Manage sensors</a></td>
-      <td>Manage your project sensors here. Add cameras or IMU sensors to your projects.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'sensormodel:subject' main_project.project_id %}">Manage subjects</a></td>
-      <td>Manage your project subjects here. Here, you can add and edit the subjects used in your projects.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'sensormodel:deployment' main_project.project_id %}">Manage deployments</a></td>
-      <td>Manage your project deployments here. This gives an overview of the deployments of your sensors to your subjects.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'sensordata:sensordatapage' main_project.project_id %}">Manage data</a></td>
-      <td>Manage your experimental data here. Here you can add zip files with your IMU or camera data to the project.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'sensordata:offset' main_project.project_id %}">Synchronize sensors</a></td>
-      <td>Here you can add the offset between the camera data and the IMU data.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'subjectannotation:annotationtaskpage' main_project.project_id %}">Annotate subject presence</a></td>
-      <td>Here you can annotate the subject presence in your videos. The videos can be annotated with your subjects as labels.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'taskgeneration:generate_form' main_project.project_id %}">Generate activity annnotation tasks</a></td>
-      <td>Annotate the data using the activity labels. It is only data with subjects present.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'data_manager:project-data' main_project.project_id|add:2 %}">Annotate</a></td>
-      <td>Annotate the data using the activity labels. It is only data with subjects present.</td>
-    </tr>
-    <tr>
-      <td><a href="{% url 'landingpage:export-project' main_project.project_id %}">Export annotations</a></td>
-      <td>Export your subject and activity annotations.</td>
-    </tr>
-  </table>
+    <h1>{{ main_project }} - overview</h1>
+    <p>
+      Welcome to your Project Dashboard! This central hub guides you through a step-by-step workflow for effectively annotating your data. Our workflow assists you in organizing and synchronizing your data with ease. The process is broken down as follows: Steps 1-4 link data to subjects and deploy sensors on those subjects. In step 5, you will annotate your 'raw' video for subject presence. Because the sensors employed in your project are not perfectly synchronized, we need to find the time offset in the clocks from your sensors. In step 6, you will annotate the offset between sensors. These 'subject presence' annotations are used in step 7 to create annotation tasks that automatically combine data from multiple sensor modalities. Step 8 will then take you to the activity annotation page, where you can investigate and annotate the synchronized multimodal data. Step 9 allows you to export all the annotations. Further details are provided in the respective steps below. 
+    </p>
+    <table>
+      <tr>
+        <td><a href="{% url 'sensormodel:sensor' main_project.project_id %}">Manage sensors</a></td>
+        <td>Manage your project sensors here. Add cameras or IMU sensors to your projects.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'sensormodel:subject' main_project.project_id %}">Manage subjects</a></td>
+        <td>Manage your project subjects here. Here, you can add and edit the subjects used in your projects.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'sensormodel:deployment' main_project.project_id %}">Manage deployments</a></td>
+        <td>Manage your project deployments here. This gives an overview of the deployments of your sensors to your subjects.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'sensordata:sensordatapage' main_project.project_id %}">Manage data</a></td>
+        <td>Manage your experimental data here. Here you can add zip files with your IMU or camera data to the project.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'sensordata:offset' main_project.project_id %}">Synchronize sensors</a></td>
+        <td>Here you can add the offset between the camera data and the IMU data.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'subjectannotation:annotationtaskpage' main_project.project_id %}">Annotate subject presence</a></td>
+        <td>Here you can annotate the subject presence in your videos. The videos can be annotated with your subjects as labels.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'taskgeneration:generate_form' main_project.project_id %}">Generate activity annnotation tasks</a></td>
+        <td>Annotate the data using the activity labels. It is only data with subjects present.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'data_manager:project-data' main_project.project_id|add:2 %}">Annotate</a></td>
+        <td>Annotate the data using the activity labels. It is only data with subjects present.</td>
+      </tr>
+      <tr>
+        <td><a href="{% url 'landingpage:export-project' main_project.project_id %}">Export annotations</a></td>
+        <td>Export your subject and activity annotations.</td>
+      </tr>
+    </table>
 </body>
 
 {% endblock %}

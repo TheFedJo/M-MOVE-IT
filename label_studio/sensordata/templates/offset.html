@@ -15,8 +15,14 @@
             <input type="submit" value="Go back to project dashboard" style="background-color: #c4862b; width:25%"/>
         </form>
     </div>
+    <h2>Sensor synchronization</h2>
+    <p>
+        The objective of this page is to synchronize all sensors involved in the project. This synchronization is achieved by annotating the positive and negative offsets between pairs of sensors.
+        To begin, you must generate tasks by selecting the relevant data files intended for synchronizing the sensors. This can be done by clicking on 'Add sensor offset'. Subsequently, annotation tasks will be generated, which can be annotated by navigating to the 'Offset Annotation Page'. To return to the project dashboard, please utilize the menu bar provided on the side.
+        Upon completion of annotation, clicking 'Parse offset annotations' will extract the offsets from your annotations, allowing you to view them in the table displayed at the bottom of this page.
+    </p>
     <div class="forms">
-        <h2>Select the data that is intended for the synchronization of the sensors</h2>
+        <h3>Select the data that is intended for the synchronization of the sensors</h3>
         <form action="{% url 'sensordata:generate_tasks' project.id %}" method="post">
             {% csrf_token %}
             <table class="forms">
@@ -50,7 +56,7 @@
     </div>
     <div class="buttons">
         <form action="{% url 'data_manager:project-data' offset_project.id %}">
-            <input type="submit" value="Go to offset annotation project" style="background-color: #c4862b; width:50%"/>
+            <input type="submit" value="Go to offset annotation page" style="background-color: #c4862b; width:50%"/>
         </form>
     </div>
     <div class="buttons">
@@ -59,9 +65,7 @@
         </form>
     </div>
     <div class="sensoroffset">
-        <h2>Sensor offsets</h2>
-        <p>Add the offset between the camera and the IMU. Since the internal time of both devices will never be fully synced there will always be an offset between the two.</p>
-        <p>Here this offset can be added in milliseconds to synchronize the data of the camera and the IMU.</p>
+        <h3>Sensor offsets</h3>
         <table class="tables">
             <tr>
                 <th>Sensor A</th>

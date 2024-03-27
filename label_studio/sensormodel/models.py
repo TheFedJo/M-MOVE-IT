@@ -48,7 +48,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=50)
     color = models.CharField(max_length=50, blank=True, null=True)
     size = models.CharField(max_length=50, blank=True, null=True)
-    extra_info = models.TextField(max_length=100, blank=True)
+    extra_info = models.TextField(blank=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True)
     
     def __str__(self):

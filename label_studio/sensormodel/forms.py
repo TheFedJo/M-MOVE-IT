@@ -7,9 +7,8 @@ class SensorForm(forms.ModelForm):
     class Meta:
         model = models.Sensor
         fields = ['name','parsable_sensor_id','sensortype','manual_offset','timezone']
-        widgets = {
-            'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in seconds (integer)'}),
-        }
+        widgets = {'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in milliseconds (integer)', 'style': 'width: 300px;'}),
+                  }
 
         def __init__(self, *args, **kwargs):
             project = kwargs.pop('project', None)
@@ -49,6 +48,10 @@ class DeploymentForm(forms.ModelForm):
     class Meta:
         model = models.Deployment
         fields = ['name','begin_datetime','end_datetime','location','sensor','subject']
+        widgets = {
+            'begin_datetime': forms.TextInput(attrs={'placeholder': 'yyyy-mm-dd hh:mm'}),
+            'end_datetime': forms.TextInput(attrs={'placeholder': 'yyyy-mm-dd hh:mm'}),
+        }
 
     def __init__(self, *args, **kwargs):
         project = kwargs.pop('project', None)  

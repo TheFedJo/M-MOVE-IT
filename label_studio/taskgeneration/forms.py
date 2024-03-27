@@ -23,7 +23,7 @@ class TaskGenerationForm(forms.Form):
 
     segment_duration = forms.IntegerField(
         min_value=1,
-        help_text="Choose the duration of each annotation segment",
+        help_text="Choose the duration of each annotation segment in seconds",
         label="Segment duration",
         required=True
     )
