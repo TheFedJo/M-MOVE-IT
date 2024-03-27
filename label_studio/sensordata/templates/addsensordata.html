@@ -5,6 +5,7 @@
 
 {% block content %}
 <head>
+    <link rel="stylesheet" href="{% static 'landingpage/css/main.css' %}">   
     <title>Add sensor data </title>
 </head>
 <body>
@@ -22,7 +23,7 @@
         </form>
     </div>
     <div id="unpacking-message" style="display: none;">
-        <p>Unpacking the zip file! Please wait...</p>
+        <p>Uploading data! Please wait...</p>
     </div>
 
     <script>

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+{% load filters %}
+
+{% block content %}
+
+<head>
+    <title></title>
+</head>
+<body>
+    <div class="buttons">
+        <form action="{% url 'sensordata:offset' project.id %}">
+            <input type="submit" value="Go back to synchronization page" />
+        </form>
+    </div>
+    <div class="forms">
+        <form action="" method="post">
+            <table>
+            {{ sensorform.as_table }}
+            </table>
+            <input type="submit" value="Adjust sensor">
+        </form>
+    </div>
+
+</body>
+
+
+{% endblock %}

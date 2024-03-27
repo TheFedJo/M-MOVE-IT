@@ -6,13 +6,14 @@
 {% block content %}
 
 <head>
+    <link rel="stylesheet" href="{% static 'landingpage/css/main.css' %}">   
     <title>Work in progress</title>
 </head>
 <body>
     <h1>Work in progress!</h1>
     <div class="buttons">
         <form action="{% url 'landingpage:landingpage' project.id %}">
-            <input type="submit" value="Go back to project page" style="background-color: #c4862b; width:25%"/>
+            <input type="submit" value="Go back to project dashboard" style="background-color: #c4862b; width:25%"/>
         </form>
     </div>
 </body>

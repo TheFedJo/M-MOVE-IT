@@ -5,12 +5,13 @@
 
 {% block content %}
 <head>
+    <link rel="stylesheet" href="{% static 'landingpage/css/main.css' %}">   
     <title>Subject annotation task creation </title>
 </head>
 <body>
     <div class="buttons">
         <form action="{% url 'landingpage:landingpage' project.id %}">
-            <input type="submit" value="Go back to project page" style="background-color: #c4862b; width:25%"/>
+            <input type="submit" value="Go back to project dashboard" style="background-color: #c4862b; width:25%"/>
         </form>
     </div>
     <div class="forms">

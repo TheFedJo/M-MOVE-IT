@@ -5,9 +5,10 @@ from sensormodel.models import Sensor
 from sensordata.models import SensorOffset, SensorData
 from projects.models import Project
 
+
 class SensorDataForm(forms.Form):
     sensor = forms.ModelChoiceField(Sensor.objects.all())
-    file = forms.FileField()
+    file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
     def __init__(self, *args, **kwargs):
         project = kwargs.pop('project', None)  # Remove 'project' from kwargs
@@ -20,8 +21,8 @@ class SensorDataForm(forms.Form):
     def clean_file(self):
         uploaded_file = self.cleaned_data.get('file')
         if uploaded_file:
-            if not zipfile.is_zipfile(uploaded_file):
-                raise ValidationError("Uploaded file must be a valid zipfile!")
+            if not (zipfile.is_zipfile(uploaded_file) or uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4')):
+                raise ValidationError("Uploaded file must be a valid zipfile or a single mp4 or csv file!")
         return uploaded_file
 
 
@@ -53,6 +54,24 @@ class OffsetAnnotationForm(forms.Form):
         super(OffsetAnnotationForm, self).__init__(*args, **kwargs)
 
         if project is not None:
-            self.fields['sync_sensordata'].queryset = SensorData.objects.filter(project=project)
-    
+            queryset = SensorData.objects.filter(project=project)
+            self.fields['sync_sensordata'].queryset = queryset
+
+            # Include additional fields in the queryset
+            # self.fields['sync_sensordata'].queryset = queryset.values(
+            #     'id','name', 'begin_datetime', 'end_datetime', 'sensor__manual_offset'
+            # )
+
    
+class SensorForm(forms.ModelForm):
+    class Meta:
+        model = Sensor
+        fields = ['manual_offset']
+        widgets = {
+            'manual_offset': forms.TextInput(attrs={'placeholder': 'Optional. Give offset in seconds (integer)'}),
+        }
+
+        def __init__(self, *args, **kwargs):
+            project = kwargs.pop('project', None)
+            super(SubjectForm, self).__init__(*args, **kwargs)
+            self.instance.project = project

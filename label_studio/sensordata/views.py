@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.apps import apps
-from .forms import SensorDataForm, SensorOffsetForm, OffsetAnnotationForm
+from .forms import SensorDataForm, SensorOffsetForm, OffsetAnnotationForm, SensorForm
 from .models import SensorData, SensorOffset, SyncSensorOverlap
 from .parsing.sensor_data import SensorDataParser
 from .parsing.video_metadata import VideoMetaData
@@ -10,7 +10,7 @@ from pathlib import Path
 from .utils.annotation_template import create_offset_annotation_template
 from tasks.models import Task, Annotation
 from django.http import HttpResponse
-
+from django.core.files.uploadedfile import InMemoryUploadedFile
 import json
 from datetime import timedelta
 from sensormodel.models import SensorType, Sensor
@@ -24,10 +24,12 @@ import zipfile
 import re
 import os
 import subprocess
-
+from pprint import pprint
 from projects.models import Project
 from tasks.models import Task
 from django.contrib import messages
+from django.views.generic.edit import FormView
+from sensormodel.utils.create_file_hash import create_file_id
 
 
 UNITS = {'days': 86400, 'hours': 3600, 'minutes': 60, 'seconds':1, 'milliseconds':0.001}
@@ -40,41 +42,112 @@ def sensordatapage(request, project_id):
 
 def addsensordata(request, project_id):
     project = Project.objects.get(id=project_id)
-    mismatched_files = []
+    mismatched_files = [] # Start list to append files of wrong sensor
+    already_uploaded = [] # Start list to append files that are already uploaded
     if request.method =='POST':
         sensordataform = SensorDataForm(request.POST, request.FILES, project=project)
         if sensordataform.is_valid():
             # Get form data
-            uploaded_file = sensordataform.cleaned_data['file']
             project = project
             sensor = sensordataform.cleaned_data.get('sensor')
-
+            # Get parsable sensor id
             parsable_sensor_id = sensor.parsable_sensor_id
+            # Get uploaded files
+            uploaded_files = request.FILES.getlist('file')
             
-            # Check if the uploaded file is a zip file
-            if zipfile.is_zipfile(uploaded_file):
-                # Process the zip file
-                with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
-                    for file_name in zip_ref.namelist():
-                        if (file_name.lower().endswith('.csv') or file_name.lower().endswith('.mp4')):  # Check if the file is a CSV or MP4 file
-                            if parsable_sensor_id is None or file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
-                                # Extract each file from the zip to a temporary location
-                                temp_file_path = zip_ref.extract(file_name)
-                                # Process the individual file
-                                process_sensor_file(request, temp_file_path, sensor, file_name, project)
-                                # Delete the temporary file
-                                os.remove(temp_file_path)
+            for uploaded_file in uploaded_files:
+                # Check if the uploaded file is a zip file
+                if zipfile.is_zipfile(uploaded_file):
+                    # Process the zip file
+                    with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
+                        for file_name in zip_ref.namelist():
+                            if (file_name.lower().endswith('.csv') or file_name.lower().endswith('.mp4')):  # Check if the file is a CSV or MP4 file
+                                # Check if the type sensor matches the datatype
+                                if (sensor.sensortype.sensortype == 'C' and file_name.lower().endswith('.csv')) or (sensor.sensortype.sensortype == 'I' and file_name.lower().endswith('.mp4')):
+                                    # Append the file to list of files with incorrect sensor
+                                    mismatched_files.append(file_name)
+                                elif parsable_sensor_id is None or file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
+                                    # Extract each file from the zip to a temporary location
+                                    
+                                    temp_file_path = zip_ref.extract(file_name)
+                                    file_name = os.path.basename(file_name)
+                                    if file_name.lower().endswith('.csv'):
+                                        # Create unique file id
+                                        file_id = create_file_id(temp_file_path)
+                                    else:
+                                        file_id = None
+                                    # Check if the file already is uploaded
+                                    if SensorData.objects.filter(project=project, file_hash=file_id).exists() and file_name.lower().endswith('.csv'):
+                                        # Append the file to lost of already uploaded files
+                                        already_uploaded.append(file_name)
+                                    else:
+                                        # Process the individual file
+                                        process_sensor_file(request, temp_file_path, sensor, file_name, project)
+                                    # Delete the temporary file
+                                    os.remove(temp_file_path)
+                                else:
+                                    # Append the file to list of files with incorrect sensor
+                                    mismatched_files.append(file_name)
+                    
+                # If the file is a single data file of csv or mp4 type
+                elif uploaded_file.name.lower().endswith('.csv') or uploaded_file.name.lower().endswith('.mp4'):
+                    # Check if the type sensor matches the datatype
+                    if (sensor.sensortype.sensortype == 'C' and uploaded_file.name.lower().endswith('.csv')) or (sensor.sensortype.sensortype == 'I' and uploaded_file.name.lower().endswith('.mp4')):
+                        # Append the file to list of files with incorrect sensor
+                        mismatched_files.append(uploaded_file.name)
+                    # Django typically stores files smaller than 5MB as a InMemoryUploadedInstance
+                    elif isinstance(uploaded_file, InMemoryUploadedFile):
+                        # Write the contents of the file to a temporary file on disk
+                        with NamedTemporaryFile(delete=False) as temp_file:
+                            # Write chunks of the uploaded file to the temporary file
+                            for chunk in uploaded_file.chunks():
+                                temp_file.write(chunk)
+                            file_path = temp_file.name
+                            if uploaded_file.name.lower().endswith('.csv'):
+                                # Create unique file id
+                                file_id = create_file_id(file_path)
                             else:
-                                mismatched_files.append(file_name)
-                if mismatched_files:
+                                file_id = None
+                            # Check if the file already is uploaded
+                            if SensorData.objects.filter(project=project, file_hash=file_id).exists() and uploaded_file.name.lower().endswith('.csv'):
+                                # Append the file to lost of already uploaded files
+                                already_uploaded.append(uploaded_file.name)
+                            else:
+                                # If there is no id for parsing or the data file matches the sensor, the file can be processed
+                                if parsable_sensor_id is None or file_validation(None, file_path, sensor, parsable_sensor_id):
+                                    process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                                else:
+                                    # Append the file to list of files with incorrect sensor
+                                    mismatched_files.append(uploaded_file.name)
+                    else:
+                        # If file is not InMemoryUploaded use temporary_file_path
+                        file_path = uploaded_file.temporary_file_path()
+                        # Create unique file id
+                        if uploaded_file.name.lower().endswith('.csv'):
+                            file_id = create_file_id(file_path)
+                        else:
+                            file_id = None
+                        if SensorData.objects.filter(project=project,sensor=sensor, file_hash=file_id).exists() and uploaded_file.name.lower().endswith('.csv'):
+                            print('should come here right', file_id)
+                            # Append the file to lost of already uploaded files
+                            already_uploaded.append(uploaded_file.name)
+                        else:
+                            if parsable_sensor_id is None or file_validation(None, file_path, sensor, parsable_sensor_id):
+                                process_sensor_file(request, file_path, sensor, str(uploaded_file), project)
+                            else:
+                                mismatched_files.append(uploaded_file.name)
+                    
+                # Raise an exception if the uploaded file is not a zip file
+                else:
+                    raise ValueError("Uploaded file must be zip, '.mp4' or '.csv'.")
+            if mismatched_files or already_uploaded:
                     # Redirect to the mismatched files warning page
                     request.session['mismatched_files'] = mismatched_files
+                    request.session['already_uploaded'] = already_uploaded
                     return redirect('sensordata:file-upload-warning', project_id=project_id)
-                
+            
+            else:
                 return redirect('sensordata:sensordatapage', project_id=project_id)
-
-            # Raise an exception if the uploaded file is not a zip file
-            raise ValueError("Uploaded file must be a zip file.")
     else:
         sensordataform = SensorDataForm(project=project)
 
@@ -83,12 +156,22 @@ def addsensordata(request, project_id):
 def file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
     # Find sensortype
     sensor_type = sensor.sensortype
-    # Open the file
-    with zip_ref.open(file_name) as file:
-        for i, line in enumerate(file):
+    # If the data is in the zip file
+    if zip_ref != None:
+        with zip_ref.open(file_name) as file:
+            for i, line in enumerate(file):
                 if i == sensor_type.sensor_id_row:
                     sensor_id_column = sensor_type.sensor_id_column if sensor_type.sensor_id_column is not None else 0
                     sensor_id = line.decode('utf-8').split(',')[sensor_id_column].strip()     
+                    if sensor_id == parsable_sensor_id:
+                        return True
+    # If data is a single data file
+    else:
+        with open(file_name, 'r', encoding='utf-8') as file:
+            for i, line in enumerate(file):
+                if i == sensor_type.sensor_id_row:
+                    sensor_id_column = sensor_type.sensor_id_column if sensor_type.sensor_id_column is not None else 0
+                    sensor_id = line.split(',')[sensor_id_column].strip()     
                     if sensor_id == parsable_sensor_id:
                         return True
 
@@ -97,7 +180,8 @@ def file_validation(zip_ref, file_name, sensor, parsable_sensor_id):
 def file_warning(request, project_id):
     project = Project.objects.get(id=project_id)
     mismatched_files = request.session.pop('mismatched_files', [])
-    return render(request, 'file_upload_warning.html', {'project':project, 'mismatched_files':mismatched_files})
+    already_uploaded = request.session.pop('already_uploaded', [])
+    return render(request, 'file_upload_warning.html', {'project':project, 'mismatched_files':mismatched_files, 'already_uploaded': already_uploaded})
 
 
 def process_sensor_file(request, file_path, sensor, name, project):
@@ -118,8 +202,39 @@ def offset(request, project_id):
     offset_annotation_project = Project.objects.get(id=project.id+3)
     sensoroffset = SensorOffset.objects.filter(project=project).order_by('sensor_A')
     offsetannotationform = OffsetAnnotationForm(project=project)
-    return render(request, 'offset.html', {'offsetannotationform':offsetannotationform, 'sensoroffset':sensoroffset, 'project':project, 'offset_project': offset_annotation_project})
+    # Calculate adjusted datetimes
+    sensor_data = SensorData.objects.filter(project=project)
+    for data in sensor_data:
+        if data.sensor.manual_offset:
+            data.begin_datetime_adjusted = data.begin_datetime + timedelta(seconds=data.sensor.manual_offset)
+            data.end_datetime_adjusted = data.end_datetime + timedelta(seconds=data.sensor.manual_offset)
+        else:
+            data.begin_datetime_adjusted = data.begin_datetime
+            data.end_datetime_adjusted = data.end_datetime
+    context = {
+        'offsetannotationform':offsetannotationform,
+        'sensor_data':sensor_data, 
+        'sensoroffset':sensoroffset, 
+        'project':project, 
+        'offset_project': offset_annotation_project
+    }
+    
+    
+    return render(request, 'offset.html', context)
 
+def adjust_manual_offset(request, project_id, id):
+    sensor = Sensor.objects.get(id=id)
+    project = Project.objects.get(id=project_id)
+    if request.method == 'POST':
+        # Send POST to adjust a sensor
+        sensorform = SensorForm(request.POST,instance=sensor)
+        if sensorform.is_valid():
+            sensorform.save()
+            return redirect('sensordata:offset', project_id = project_id)
+    else:
+        # Go to sensor adjustment page
+        sensorform = SensorForm(instance=sensor)
+    return render(request, 'edit_manual_offset.html', {'sensorform':sensorform, 'project':project})
 
 def delete_offset(request, project_id, id):
     project = Project.objects.get(id=project_id)
@@ -151,7 +266,7 @@ def parse_IMU(request, file_path, sensor, name, project):
     # Parse data
 
     project_controller = ProjectController()
-    sensor_data = SensorDataParser(project_controller=project_controller, file_path=Path(file_path),sensor_model_id= sensortype.id)
+    sensor_data = SensorDataParser(project_controller=project_controller, file_path=Path(file_path),sensor_model_id= sensortype.id,timezone=sensor.timezone)
     # Get parsed data
     imu_df = sensor_data.get_data()
     # Add L2 norm of Ax,Ay,Az
@@ -171,9 +286,9 @@ def parse_IMU(request, file_path, sensor, name, project):
     with NamedTemporaryFile(suffix='.csv', prefix=(str(name).split('/')[-1]) ,mode='w', delete=False) as csv_file:
         # Write the dataframe to the temporary file
         imu_df.to_csv(csv_file.name, index=False)
-        file_path=csv_file.name
+        new_file_path=csv_file.name
     # Upload parsed sensor(IMU) data to corresponding project
-    upload_sensor_data(request=request, name=name, file_path=file_path ,project=project)
+    upload_sensor_data(request=request, name=name, file_path=new_file_path ,project=project)
     # Retrieve id of the FileUpload object that just got created. This is the latest created instance of the class FileUpload
     fileupload_model = apps.get_model(app_label='data_import', model_name='FileUpload')
     file_upload = fileupload_model.objects.latest('id')
@@ -209,7 +324,8 @@ def parse_IMU(request, file_path, sensor, name, project):
                                            begin_datetime=begin_datetime,
                                            end_datetime=end_datetime, 
                                            project=project,
-                                           file_upload=file_upload)
+                                           file_upload=file_upload,
+                                           file_hash = create_file_id(file_path))
 
 
 def parse_camera(request, file_path, sensor, name, project):
@@ -225,7 +341,7 @@ def parse_camera(request, file_path, sensor, name, project):
     
     # Get sensortype config
     sensortype = SensorType.objects.get(id=sensor.sensortype.id)
-    sensor_timezone = sensortype.timezone
+    sensor_timezone = sensor.timezone
     # Parse video meta data
     videometadata = VideoMetaData(file_path=file_path,sensor_timezone=sensor_timezone)
     
