@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import os
 
 # Path to the folder containing the CSV files
-csv_folder_path = "C:/Users/KammingaJW/Downloads/activity_annotations"  # Replace with the path to your folder containing CSV files
+csv_folder_path = 'C:/Users/KammingaJW/Downloads/Horstlinde_export_1/activity_annotations/'
 
 # Path to the JSON file
-json_file_path = 'C:/Users/KammingaJW/Downloads/activity_annotations/activity_annotations.json'  # Replace with the path to your JSON file
+json_file_path = csv_folder_path+'activity_annotations.json'  # Replace with the path to your JSON file
 
 
 # Function to calculate windowed statistics for a segment
@@ -64,7 +64,7 @@ labels = [stat['label'] for stat in all_windowed_stats]
 
 # Scatter plot with distinct colors
 unique_labels = list(set(labels))
-colors = plt.colormaps.get_cmap('tab20') #, len(unique_labels))
+colors = plt.cm.get_cmap('tab20', len(unique_labels))
 
 plt.figure(figsize=(10, 6))
 for i, label in enumerate(unique_labels):
