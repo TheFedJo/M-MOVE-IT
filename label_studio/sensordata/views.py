@@ -206,8 +206,8 @@ def offset(request, project_id):
     sensor_data = SensorData.objects.filter(project=project)
     for data in sensor_data:
         if data.sensor.manual_offset:
-            data.begin_datetime_adjusted = data.begin_datetime + timedelta(seconds=data.sensor.manual_offset)
-            data.end_datetime_adjusted = data.end_datetime + timedelta(seconds=data.sensor.manual_offset)
+            data.begin_datetime_adjusted = data.begin_datetime + timedelta(milliseconds=data.sensor.manual_offset)
+            data.end_datetime_adjusted = data.end_datetime + timedelta(milliseconds=data.sensor.manual_offset)
         else:
             data.begin_datetime_adjusted = data.begin_datetime
             data.end_datetime_adjusted = data.end_datetime
