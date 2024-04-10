@@ -1,112 +1,31 @@
-<img src="https://raw.githubusercontent.com/heartexlabs/label-studio/master/images/ls_github_header.png"/>
+## M-MOVE-IT: Multimodal Machine Observation and Video-Enhanced Integration Tool for Data Annotation
 
-![GitHub](https://img.shields.io/github/license/heartexlabs/label-studio?logo=heartex) ![label-studio:build](https://github.com/heartexlabs/label-studio/workflows/label-studio:build/badge.svg) ![GitHub release](https://img.shields.io/github/v/release/heartexlabs/label-studio?include_prereleases)
+AI-Sensus has been built on the open source data labeling tool Label Studio (LS). The 1.4.1 version of Label Studio was forked and extra features were added to this version. The workflow overview, project management and sensor data parsing were thereafter improved.
 
-[Website](https://labelstud.io/) • [Docs](https://labelstud.io/guide/) • [Twitter](https://twitter.com/heartexlabs) • [Join Slack Community <img src="https://app.heartex.ai/docs/images/slack-mini.png" width="18px"/>](http://slack.labelstud.io.s3-website-us-east-1.amazonaws.com?source=github-1)
+The version of LS is important. We use an older version because this version still supports a ‘hack’ that allows time series being synchronized with videos when annotating. The way this feature works will be explained later in this documentation. What is important for now is that by upgrading the fork of LS to a version higher than v1.4.1 one disables this functionality.
 
-
-## What is Label Studio?
-
-<!-- <a href="https://labelstud.io/blog/release-130.html"><img src="https://github.com/heartexlabs/label-studio/raw/master/docs/themes/htx/source/images/release-130/LS-Hits-v1.3.png" align="right" /></a> -->
-
-Label Studio is an open source data labeling tool. It lets you label data types like audio, text, images, videos, and time series with a simple and straightforward UI and export to various model formats. It can be used to prepare raw data or improve existing training data to get more accurate ML models.
-
-- [Try out Label Studio](#try-out-label-studio)
-- [What you get from Label Studio](#what-you-get-from-label-studio)
-- [Included templates for labeling data in Label Studio](#included-templates-for-labeling-data-in-label-studio)
-- [Set up machine learning models with Label Studio](#set-up-machine-learning-models-with-Label-Studio)
-- [Integrate Label Studio with your existing tools](#integrate-label-studio-with-your-existing-tools)
-
-![Gif of Label Studio annotating different types of data](https://raw.githubusercontent.com/heartexlabs/label-studio/master/images/annotation_examples.gif)
-
-Have a custom dataset? You can customize Label Studio to fit your needs. Read an [introductory blog post](https://towardsdatascience.com/introducing-label-studio-a-swiss-army-knife-of-data-labeling-140c1be92881) to learn more. 
-
-## Try out Label Studio
-
-Install Label Studio locally, or deploy it in a cloud instance. Also you can try [Label Studio Teams](https://app.heartex.com).
-
-- [Install locally with Docker](#install-locally-with-docker)
-- [Run with Docker Compose (Label Studio + Nginx + PostgreSQL)](#run-with-docker-compose)
-- [Install locally with pip](#install-locally-with-pip)
-- [Install locally with Anaconda](#install-locally-with-anaconda)
-- [Install for local development](#install-for-local-development)
-- [Deploy in a cloud instance](#deploy-in-a-cloud-instance)
-
-### Install locally with Docker
-Official Label Studio docker image is [here](https://hub.docker.com/r/heartexlabs/label-studio) and it can be downloaded with `docker pull`. 
-Run Label Studio in a Docker container and access it at `http://localhost:8080`.
-
-
+### Set up local project for development
 ```bash
-docker pull heartexlabs/label-studio:latest
-docker run -it -p 8080:8080 -v `pwd`/mydata:/label-studio/data heartexlabs/label-studio:latest
-```
-You can find all the generated assets, including SQLite3 database storage `label_studio.sqlite3` and uploaded files, in the `./mydata` directory.
-
-#### Override default Docker install
-You can override the default launch command by appending the new arguments:
-```bash
-docker run -it -p 8080:8080 -v `pwd`/mydata:/label-studio/data heartexlabs/label-studio:latest label-studio --log-level DEBUG
-```
-
-#### Build a local image with Docker
-If you want to build a local image, run:
-```bash
-docker build -t heartexlabs/label-studio:latest .
-```
-
-### Run with Docker Compose
-Docker Compose script provides production-ready stack consisting of the following components:
-
-- Label Studio
-- [Nginx](https://www.nginx.com/) - proxy web server used to load various static data, including uploaded audio, images, etc.
-- [PostgreSQL](https://www.postgresql.org/) - production-ready database that replaces less performant SQLite3.
-
-To start using the app from `http://localhost` run this command:
-```bash
-docker-compose up
-```
-
-### Install locally with pip
-
-```bash
-# Requires Python >=3.7 <=3.9
-pip install label-studio
-
-# Start the server at http://localhost:8080
-label-studio
-```
-
-### Install locally with Anaconda
-
-```bash
-conda create --name label-studio
-conda activate label-studio
-pip install label-studio
-```
-
-### Install for local development
-
-You can run the latest Label Studio version locally without installing the package with pip. 
-
-```bash
+# Set-up virtual environment (python v3.10)
+pip install virtualenv #only if not yet installed virtualenv
+python -m venv <venv-name>
+<venv-name>/Scripts/activate
+# Clone the repository
+git clone https://github.com/AI-Sensus/label-studio
+# Go to the directory label-studio
+cd label-studio
 # Install all package dependencies
 pip install -e .
-# Run database migrations
+# Run database migrations. This creates the database for Django
 python label_studio/manage.py migrate
-# Start the server in development mode at http://localhost:8080
+# Configure the static files from the React project
+python label_studio/manage.py collectstatic
+# Run the server locally at http://localhost:8080
 python label_studio/manage.py runserver
 ```
+After setting up the local development project, sign up for label-studio at the first webpage when running the app.
 
-### Deploy in a cloud instance
-
-You can deploy Label Studio with one click in Heroku, Microsoft Azure, or Google Cloud Platform: 
-
-[<img src="https://www.herokucdn.com/deploy/button.svg" height="30px">](https://heroku.com/deploy?template=https://github.com/heartexlabs/label-studio/tree/master)
-[<img src="https://deploy.cloud.run/button.svg" height="30px">](https://deploy.cloud.run)
-
-
-#### Apply frontend changes
+### Apply frontend changes
 
 The frontend part of Label Studio app lies in the `frontend/` folder and written in React JSX. In case you've made some changes there, the following commands should be run before building / starting the instance:
 
@@ -118,100 +37,36 @@ cd ../..
 python label_studio/manage.py collectstatic --no-input
 ```
 
-### Troubleshoot installation
-If you see any errors during installation, try to rerun the installation
+### Django
+Label Studio has been built using the Django framework. We keep our additions separate from the code from LS. Django allows this by making use of apps for different functionalities of the web app. All of our work is the following apps: landingpage, sensormodel, sensordata, subjectannoation, taskgeneration. To integrate these apps in the functionality of the complete project adjustments have been made in the ‘core’ app. These can be found in ‘core/urls.py’ and ‘core/settings/base.py’.
 
-```bash
-pip install --ignore-installed label-studio
-```
+### Landingpage
+The ‘landingpage’ app handles the overview of all projects, this is called the dashboard. Also, it handles the project pages of all the projects. Here one can find all functionality explained in the steps one should take.
 
-#### Install dependencies on Windows 
-To run Label Studio on Windows, download and install the following wheel packages from [Gohlke builds](https://www.lfd.uci.edu/~gohlke/pythonlibs) to ensure you're using the correct version of Python:
-- [lxml](https://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml)
+When one creates a project in the dashboard in the backend four LS subprojects are created per project. An LS project is what one normally would use in LS to upload, annotate and export. LS shows all the data in a project all the time and allows for one annotation setup per project. However since we cut up the files and use annotation for several use cases we chose to use the project structure from LS for our data management and create several LS projects per AI Sensus project. The AI Sensus projects are stored as django models. It creates the following LS projects: data import, subject annotation, activity  annotation. It also handles the exportation of a project when finished by exporting all annotations as a JSON file together with the corresponding data files. 
 
-```bash
-# Upgrade pip 
-pip install -U pip
+The ‘landingpage’ app contains the static files used by the AI Sensus html pages. These are stored in ‘landingpage/static/main.css’.
 
-# If you're running Win64 with Python 3.8, install the packages downloaded from Gohlke:
-pip install lxml‑4.5.0‑cp38‑cp38‑win_amd64.whl
+### Sensormodel
+The ‘sensormodel’ app handles all the used sensors, subject and the relationships between these per project. It stores them as objects in this model and uses a ForeignKey relationship with the project to make sure all sensors and subjects are related to a certain project. It contains the following models: Sensor, SensorType, Subject and Deployment. The view methods handle adding, adjusting and deleting sensors, subjects and deployments. SensorTypes contain information for specific sensors that is necessary for parsing the data. SensorTypes are different since they are stored in label-studio/sensortypes as .yaml files and are parsed to django models by the method sync_sensor_parser_templates(). This method checks for updates in the files in the label-studio/sensortypes folder and adds or updates the SensorType objects accordingly.
 
-# Install label studio
-pip install label-studio
-```
+### Sensordata
+The ‘sensordata’ app handles all imported sensor data and stores them into the ‘dataimport’ subproject. It extracts all data files from an uploaded zip file and parses the sensor information from the data. It then creates a LS object Sensordata for all files. The uploaded zip file should contain only files from the same sensor.
 
-## What you get from Label Studio
+The ‘sensordata’ app also handles the offsets between sensors. When a project is created, a subproject ‘offsetannotation’ is created. This project is used to annotate the offset between overlapping data from different sensors and these offsets are stored in Django objects. For more information on offset annotation see ‘Efficient Synchronization of Video and IMU Data for Activity Recognition’.
 
-![Screenshot of Label Studio data manager grid view with images](https://raw.githubusercontent.com/heartexlabs/label-studio/master/images/labelstudio-ui.gif)
+### Subjectannotation
+The ‘subjectannotation’ app handles the ‘subjectannotation’ subproject and creates annotation labels from all project subjects. The mp4 data is converted into annotation tasks inside this subproject. The subject presence annotations are automatically parsed into SubjectPresence objects when generating activity annotation tasks in the ‘taskgeneration’ app. The parsing method is in the ‘subjectannotation’ app. 
 
-- **Multi-user labeling** sign up and login, when you create an annotation it's tied to your account.
-- **Multiple projects** to work on all your datasets in one instance.
-- **Streamlined design** helps you focus on your task, not how to use the software.
-- **Configurable label formats** let you customize the visual interface to meet your specific labeling needs.
-- **Support for multiple data types** including images, audio, text, HTML, time-series, and video. 
-- **Import from files or from cloud storage** in Amazon AWS S3, Google Cloud Storage, or JSON, CSV, TSV, RAR, and ZIP archives. 
-- **Integration with machine learning models** so that you can visualize and compare predictions from different models and perform pre-labeling.
-- **Embed it in your data pipeline** REST API makes it easy to make it a part of your pipeline
+### Taskgeneration
+The ‘taskgeneration’ app generates tasks by selecting all data where the input subject is present and slicing it in segments of a chosen length. The mp4 and csv data are synchronized using the SensorOffset objects. Using the offset and the datetimes that were parsed when uploading sensor data it is possible to determine the overlap two SensorData objects really have. These are stored as SensorOverlap objects. Using these objects and a user-chosen segment length, segments can be cut up, uploaded and tasks can be generated. 
 
-## Included templates for labeling data in Label Studio 
+### Time series and video annotation: Synchronization trick
+The power of the AI Sensus annotation tool is the ability to annotate several sensor modes at the same time and have them synchronized. LS does not offer this functionality. An old post on the LS site, that has now been deleted (it has been replaced on the site 2024-03-12), shows a way to allow synchronization between a time series and a video. As has been said earlier, this functionality has been removed from LS in versions later than 1.4.1. Therefore sticking to this version is important. 
 
-Label Studio includes a variety of templates to help you label your data, or you can create your own using specifically designed configuration language. The most common templates and use cases for labeling include the following cases:
+The synchronization works one way. This means that changing the timestamp of the timeseries moves the timestamp of the video, but changing the timestamp of the video does not move the timestamp of the timeseries.
 
-<img src="https://raw.githubusercontent.com/heartexlabs/label-studio/master/images/templates-categories.jpg" />
+[Click here for more explanation](https://labelstud.io/guide/ts+video.html)
 
-## Set up machine learning models with Label Studio
-
-Connect your favorite machine learning model using the Label Studio Machine Learning SDK. Follow these steps:
-
-1. Start your own machine learning backend server. See [more detailed instructions](https://github.com/heartexlabs/label-studio-ml-backend).
-2. Connect Label Studio to the server on the model page found in project settings.
-
-This lets you:
-
-- **Pre-label** your data using model predictions. 
-- Do **online learning** and retrain your model while new annotations are being created. 
-- Do **active learning** by labeling only the most complex examples in your data.
-
-## Integrate Label Studio with your existing tools
-
-You can use Label Studio as an independent part of your machine learning workflow or integrate the frontend or backend into your existing tools.  
-
-* Use the [Label Studio Frontend](https://github.com/heartexlabs/label-studio-frontend) as a separate React library. See more in the [Frontend Library documentation](https://labelstud.io/guide/frontend.html). 
-
-## Ecosystem
-
-| Project | Description |
-|-|-|
-| label-studio | Server, distributed as a pip package |
-| [label-studio-frontend](https://github.com/heartexlabs/label-studio-frontend) | React and JavaScript frontend and can run standalone in a web browser or be embedded into your application. |  
-| [data-manager](https://github.com/heartexlabs/dm2) | React and JavaScript frontend for managing data. Includes the Label Studio Frontend. Relies on the label-studio server or a custom backend with the expected API methods. | 
-| [label-studio-converter](https://github.com/heartexlabs/label-studio-converter) | Encode labels in the format of your favorite machine learning library | 
-| [label-studio-transformers](https://github.com/heartexlabs/label-studio-transformers) | Transformers library connected and configured for use with Label Studio |
-
-
-## Roadmap
-
-Want to use **The Coolest Feature X** but Label Studio doesn't support it? Check out [our public roadmap](roadmap.md)!
-
-## Citation
-
-```tex
-@misc{Label Studio,
-  title={{Label Studio}: Data labeling software},
-  url={https://github.com/heartexlabs/label-studio},
-  note={Open source software available from https://github.com/heartexlabs/label-studio},
-  author={
-    Maxim Tkachenko and
-    Mikhail Malyuk and
-    Nikita Shevchenko and
-    Andrey Holmanyuk and
-    Nikolai Liubimov},
-  year={2020-2021},
-}
-```
-
-## License
-
-This software is licensed under the [Apache 2.0 LICENSE](/LICENSE) © [Heartex](https://www.heartex.ai/). 2020-2021
-
-<img src="https://github.com/heartexlabs/label-studio/blob/master/images/opossum_looking.png?raw=true" title="Hey everyone!" height="140" width="140" />
+### LABEL-STUDIO
+If you're interested in exploring the original README for Label Studio, you can [click here.](LABEL-STUDIO.md) It contains detailed information about the original Label Studio software and its features.
