@@ -4,6 +4,8 @@ AI-Sensus has been built on the open source data labeling tool Label Studio (LS)
 
 The version of LS is important. We use an older version because this version still supports a ‘hack’ that allows time series being synchronized with videos when annotating. The way this feature works will be explained later in this documentation. What is important for now is that by upgrading the fork of LS to a version higher than v1.4.1 one disables this functionality.
 
+Watch [this seminar presentation](https://www.youtube.com/watch?v=b4Jyy0eGvug&ab_channel=JacobKamminga) that explains the motivation for this project and a live demo of this tool.
+
 ### Set up local project for development
 ```bash
 # Set-up virtual environment (python v3.10)
