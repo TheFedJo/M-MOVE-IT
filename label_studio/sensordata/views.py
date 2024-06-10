@@ -343,14 +343,15 @@ def parse_camera(request, file_path, sensor, name, project):
     sensortype = SensorType.objects.get(id=sensor.sensortype.id)
     sensor_timezone = sensor.timezone
     # Parse video meta data
+    print(file_path)
     videometadata = VideoMetaData(file_path=file_path,sensor_timezone=sensor_timezone)
     
     # Use parsed data from metadata to create SensorData object
     # Get the begin datetime and duration to determine the end datetime 
     begin_datetime = videometadata.video_begin_time
     video_duration = videometadata.video_duration # in seconds
-    delta = timedelta(seconds= float(video_duration))
-    end_datetime =  begin_datetime + delta
+    delta = timedelta(seconds=float(video_duration))
+    end_datetime = begin_datetime + delta
 
     # Create SensorData object with parsed data
     sensordata = SensorData.objects.create(name=name, 
